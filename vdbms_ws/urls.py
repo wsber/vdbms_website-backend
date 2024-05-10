@@ -29,8 +29,10 @@ urlpatterns = [
     path('videos/query', views.get_query_videos),
     path('videos/add', views.add_video),
     path('videos/id', views.get_video_by_id),
+    path('videos/ids', views.get_videos_by_ids),
     path('register/', views.register),
-    path('model/', views.get_models)
+    path('model/', views.get_models),
+    path('model/load', views.load_data),
 ]
 # 允许所有的上传文件media文件被访问
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

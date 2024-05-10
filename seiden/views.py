@@ -160,6 +160,20 @@ def get_video_by_id(request):
         return JsonResponse({'code': 0, 'msg': '获取视频信息出现异常' + str(e)})
 
 @csrf_exempt
+def get_videos_by_ids(request):
+  """
+  根据视频ID获取视频信息
+  """
+  data = json.loads(request.body.decode('utf-8'))
+  id_list = data['ids']
+  videos = Video.objects.filter(id__in=id_list).values()
+  videos = list(videos)
+  return JsonResponse({
+            'code': 1,
+            'data': videos
+        })
+
+@csrf_exempt
 def get_models(request):
     try:
         obj_models = VdbmsModel.objects.all().order_by('id').values()
@@ -171,3 +185,6 @@ def get_models(request):
         })
     except Exception as e:
         return JsonResponse({'code':0,'msg':'获取模型信息出现异常' + str(e)})
+@csrf_exempt
+def load_data(request):
+    return JsonResponse({'code':1})
