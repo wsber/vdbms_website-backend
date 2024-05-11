@@ -1,0 +1,9 @@
+setup.py
+SWAG.egg-info/PKG-INFO
+SWAG.egg-info/SOURCES.txt
+SWAG.egg-info/dependency_links.txt
+SWAG.egg-info/top_level.txt
+swag/__init__.py
+swag/decode_all.py
+swag/runner.py
+swag/video_capture.py

@@ -41,7 +41,7 @@ class Video(models.Model):
 class VdbmsModel(models.Model):
     name = models.CharField(max_length=100, verbose_name="模型名称")
     description = models.TextField(verbose_name="模型描述", blank=True, null=True)
-    recommend = models.IntegerField(max_length=20, verbose_name="模型推荐度")
+    recommend = models.IntegerField(verbose_name="模型推荐度")
     upload_time = models.DateTimeField(auto_now_add=True, verbose_name="模型上传时间")
     parameter_url = models.URLField(max_length=200, verbose_name="超参数加载地址")  # 新增视频地址字段
     class Meta:

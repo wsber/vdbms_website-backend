@@ -2,7 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-sys.path.append('D:\\Projects\\PyhtonProjects\\VDBMS_WBWS\\vdbms_ws')
+sys.path.append('D:/Projects/PyhtonProjects/VDBMS_WBWS/vdbms_ws')
 
 def main():
     """Run administrative tasks."""
