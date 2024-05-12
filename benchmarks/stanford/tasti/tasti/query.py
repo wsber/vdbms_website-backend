@@ -140,14 +140,14 @@ class AggregateQuery(BaseQuery):
         print('[Here is Blazit time]:', Blazit_time)
         # print('[Here is index_cahce_len 2]: ', len(self.index.index_cache))
         res = {
-            'initial_estimate': y_pred.sum(),
-            'blazeit_estimate': estimate,
-            'nb_samples': nb_samples,
-            'y_pred': y_pred,
-            'y_true': y_true,
-            'query_time': Blazit_time + propagate_time,
-            'Blazit time': Blazit_time,
-            'propagate_time': propagate_time
+            'initial_estimate': float(y_pred.sum()),
+            'blazeit_estimate': float(estimate),
+            'nb_samples': int(nb_samples),
+            'y_pred': [float(pred) for pred in y_pred.tolist()],
+            # 'y_true': y_true,
+            'query_time': float(Blazit_time + propagate_time),
+            'Blazit time': float(Blazit_time),
+            'propagate_time': float(propagate_time)
         }
         print("[estimate]: ", res['blazeit_estimate'])
         print('[initial_estimate]: ', res['initial_estimate'])
@@ -345,9 +345,9 @@ class SUPGRecallQuery(SUPGPrecisionQuery):
         res = {
             'inds': inds,
             'inds_length': inds.shape[0],
-            'y_true': y_true,
+            # 'y_true': y_true,
             'y_pred': y_pred,
-            'source': source
+            # 'source': source
         }
         return res
 

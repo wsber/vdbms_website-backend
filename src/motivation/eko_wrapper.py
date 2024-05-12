@@ -27,7 +27,8 @@ class EKO(Index):
         return self.config.cache_dir
 
     def override_target_dnn_cache(self, target_dnn_cache, train_or_test):
-        root = 'D:/Projects/PyhtonProjects/thesis/video_data'
+        # root = 'D:/Projects/PyhtonProjects/thesis/video_data'
+        root = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
         ROOT_DATA = self.config.video_name
         print(ROOT_DATA)
         labels_fp = os.path.join(root, ROOT_DATA, 'tasti_labels.csv')

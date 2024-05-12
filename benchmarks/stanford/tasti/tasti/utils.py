@@ -67,8 +67,8 @@ class DNNOutputCacheFloat:
                 # print(self.idx)
                 # print('[call this override_arithmetic_operator_def to construct?]')
                 # results = model(self.images[self.idx], size=640)
-                results = self.index.run_oracle_model_full(self.idx)
-                # results = self.index.run_oracle_model(self.idx)
+                # results = self.index.run_oracle_model_full(self.idx)
+                results = self.index.run_oracle_model(self.idx)
                 # max_confidence = self.get_confidence_of_yolvo5s_result(results)
                 # value = max_confidence
                 value = self.scoring_fn(results)
@@ -106,7 +106,7 @@ class DNNOutputCacheFloat:
         # max_confidence = self.get_confidence_of_yolvo5s_result(results)
         # value = max_confidence
         # value = self.scoring_fn(results)
-        print('[call this __float__ to transfer]')
+        # print('[call this __float__ to transfer]')
         results = self.index.run_oracle_model(self.idx)
         value = self.scoring_fn(results)
         return float(value)

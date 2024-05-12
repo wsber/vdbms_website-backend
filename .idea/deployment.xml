@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="wangshuo_20@59.72.109.26:22 password (7)" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
       <paths name="wangshuo_20@59.72.109.26:22 password">
         <serverdata>
@@ -44,6 +44,14 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="wangshuo_20@59.72.109.26:22 password (7)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/wangshuo_20/pythonpr/VDBMS_ws" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
     </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
   </component>
 </project>

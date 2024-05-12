@@ -415,8 +415,8 @@ class EKOPSConfig(IndexConfig):
         self.video_name = dataset_name
         self.category = category
 
-        # self.cache_dir = f'/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{dataset_name}/seiden'
-        self.cache_dir = f'D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{dataset_name}/seiden'
+        self.cache_dir = f'/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{dataset_name}/seiden'
+        # self.cache_dir = f'D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{dataset_name}/seiden'
 
         self.device = 'gpu'
         self.num_threads = 16

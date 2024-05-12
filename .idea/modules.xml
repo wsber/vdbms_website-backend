@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/vdbms_ws.iml" filepath="$PROJECT_DIR$/.idea/vdbms_ws.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/VDBMS_ws.iml" filepath="$PROJECT_DIR$/.idea/VDBMS_ws.iml" />
     </modules>
   </component>
 </project>

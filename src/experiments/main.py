@@ -32,7 +32,7 @@ def execute_ekomab(images, video_name, keep=False, category='car', nb_buckets=10
                    precision_threshold=0.95, label_propagate_al=0):
     ekoconfig = EKOPSConfig(video_name, category=category, nb_buckets=nb_buckets, precision_threshold=0.95,
                             reacall_threshold=0.95, label_propagate_al=label_propagate_al)
-    base = 'D:\\Projects\\PyhtonProjects\\thesis\\video_data'
+    base = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
     # directory = os.path.join(base, video_name, 'video.mp4')
     directory = os.path.join(base, video_name)
     print(directory)
@@ -59,7 +59,7 @@ def query_process_aggregate(index, error=0.05, y=None, images=None):
     et = time.perf_counter()
     t = et - st
 
-    return query, t, result
+    return t, result
 
 
 def query_process_precision(index, dnn_invocation=1000, y=None, images=None):
@@ -84,13 +84,10 @@ def get_labels(index, dnn_invocation=1000, y=None):
         assert (y is not None)
     if y is None:
         assert (index is not None)
-
     query = NightStreetSUPGRecallQuery(index)
-
     result = query.execute_metrics(dnn_invocation, y=y)
     precision = result['precision']
     recall = result['recall']
-
     return query
 
 

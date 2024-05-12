@@ -292,8 +292,8 @@ class EKO_mab(EKO_alternate):
     def get_history_structured_data_frameId(self):
         # 指定要读取的文件路径
         print('[history_video_name]: ', self.config.video_name)
-        # output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
-        output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
+        output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
+        # output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
         filename = f"{self.config.video_name}_reps_frame.txt"
         frame_file_path = os.path.join(output_dir, filename)
         # 创建一个空列表用于存储读取的帧号数据
@@ -631,8 +631,8 @@ class EKO_mab(EKO_alternate):
             output_dir (str): The directory to save the CSV file.
             filename (str): The name of the CSV file.
         """
-        # output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
-        output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
+        output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
+        # output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
         filename = fr"{self.config.video_name}_cache.csv"
         index = self.index_cache
         # Create the output directory if it doesn't exist
@@ -669,8 +669,8 @@ class EKO_mab(EKO_alternate):
         sorted_keys = sorted(index.keys())
         print('[len_cache_frame]: ', len(sorted_keys))
         content_to_write = '\n'.join(str(key) for key in sorted_keys)
-        # output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
-        output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
+        output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
+        # output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
         filename = fr"{self.config.video_name}_reps_frame.txt"
         frame_file_path = os.path.join(output_dir, filename)
         with open(frame_file_path, 'w') as framefile:
@@ -722,8 +722,8 @@ class EKO_mab(EKO_alternate):
         sorted_keys = sorted(index.keys())
         print('[len_cache_frame]: ', len(sorted_keys))
         content_to_write = '\n'.join(str(key) for key in sorted_keys)
-        # output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
-        output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
+        output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
+        # output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
         filename = fr"{self.config.video_name}_reps_frame.txt"
         frame_file_path = os.path.join(output_dir, filename)
         with open(frame_file_path, 'w') as framefile:
@@ -750,8 +750,8 @@ class EKO_mab(EKO_alternate):
         return self.config.cache_dir
 
     def override_target_dnn_cache(self, target_dnn_cache, train_or_test):
-        # root = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
-        root = 'D:/Projects/PyhtonProjects/thesis/video_data'
+        root = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
+        # root = 'D:/Projects/PyhtonProjects/thesis/video_data'
         ROOT_DATA = self.config.video_name
         category = self.config.category
         print(category)

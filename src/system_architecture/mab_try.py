@@ -692,8 +692,8 @@ class EKO_mab(EKO_alternate):
             output_dir (str): The directory to save the CSV file.
             filename (str): The name of the CSV file.
         """
-        # output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
-        output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
+        output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
+        # output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
         filename = fr"{self.config.video_name}_cache.csv"
         index = self.index_cache
         # Create the output directory if it doesn't exist

@@ -4,6 +4,8 @@ import hashlib
 import os.path
 import sys
 
+from django.template import response
+
 sys.path.append('/home/wangshuo_20/pythonpr/seiden_ws')
 import uuid
 from django.contrib.auth.hashers import make_password
@@ -69,7 +71,7 @@ def get_users(request):
     except Exception as e:
         return JsonResponse({'code': 0, 'msg': '获取用户信息出现异常' + str(e)})
 
-
+@csrf_exempt
 def get_videos(request):
     try:
         obj_students = Video.objects.all().order_by('id').values()
@@ -218,7 +220,10 @@ from src.experiments.main import execute_ekomab
 @csrf_exempt
 def load_data(request):
     global images
-    video_name = 'cherry_1min'
+    data = json.loads(request.body.decode('utf-8'))
+    # video_name = 'cherry_10min'
+    video_name = data['videos'][0]['name']
+    print('[video_name]: ', video_name)
     images = load_dataset(video_name)
     # anchor_count = int(len(images) * 0.1)
     # eko = execute_ekomab(images, video_name, nb_buckets=anchor_count)
@@ -229,8 +234,6 @@ def load_data(request):
                              'len_images': len(images),
                              'video_name': video_name
                          }})
-
-
 @csrf_exempt
 def exe_model_pre(request):
     from src.experiments.main import query_process_precision
@@ -238,21 +241,29 @@ def exe_model_pre(request):
     data = json.loads(request.body.decode('utf-8'))
     len_images = data['len_images']
     video_name = data['video_name']
-    parameter_list = data['parameter_list']
-    print('[parameter_list]: ', parameter_list)
+    frame_sql = data['frame_sql']
+    selfParameters = data['selfParameters']
+    print('[frame_sql]: ', frame_sql)
+    print('[selfParameters]: ', selfParameters)
     anchor_count = int(len_images * 0.1)
     try:
         eko = execute_ekomab(images, video_name, nb_buckets=anchor_count)
         print(anchor_count)
         times, result = query_process_precision(eko, dnn_invocation=anchor_count, images=images)
-        result['inds'] = list(result['inds'].astype(int))
-        result['y_pred'] = list(result['y_pred'].astype(float))
+        pre_result = {'inds': [int(ind) for ind in result['inds']], 'y_pred': [float(pred) for pred in result['y_pred']]}
+        # 遍历字典的键值对
+        # for key, value in pre_result.items():
+        #     # 使用 type() 函数获取数据项的类型
+        #     value_type = type(value)
+        #     # 输出键值对的键、值和数据类型
+        #     print(f"Key: {key}, Value: {value}, Type: {value_type}")
         # 将字典 result 转换为 JSON 字符串
-        result_json = json.dumps(result)
+        # result_json = json.dumps(result)
+        print('[Here has executed the pre al]')
         return JsonResponse({
             'code': 1,
-            # 'data': list(result['inds'])
-            'data': 'exe pre complete successfully'
+            'data': pre_result,
+            'msg': 'exe pre complete successfully'
         })
     except Exception as e:
         return JsonResponse({'code': -1, 'msg': '失败' + str(e)})
@@ -270,9 +281,12 @@ def exe_model_rec(request):
         eko = execute_ekomab(images, video_name, nb_buckets=anchor_count)
         print(anchor_count)
         times, result = query_process_recall(eko, dnn_invocation=anchor_count, images=images)
+        pre_result = {'inds': [int(ind) for ind in result['inds']],
+                      'y_pred': [float(pred) for pred in result['y_pred']]}
         return JsonResponse({
             'code': 1,
-            'data': result
+            'data': pre_result,
+            'msg': 'exe rec complete successfully'
         })
     except Exception as e:
         return JsonResponse({'code': -1, 'msg': '失败' + str(e)})
@@ -290,9 +304,11 @@ def exe_model_agg(request):
         eko = execute_ekomab(images, video_name, nb_buckets=anchor_count)
         print(anchor_count)
         times, result = query_process_aggregate(eko, images=images)
+        result_json = json.dumps(result)
         return JsonResponse({
             'code': 1,
-            'data': result
+            'data': result_json,
+            'msg': 'exe agg successfully'
         })
     except Exception as e:
         return JsonResponse({'code': -1, 'msg': '失败' + str(e)})

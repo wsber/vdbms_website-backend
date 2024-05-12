@@ -141,7 +141,8 @@ class DecompressionModule:
 
     def get_video_capture_objects(self, folder_path, video_name, frame_count_limit=300000, size=[234, 416]):
         # 指定视频文件所在的文件夹路径
-        folder_path = fr'D:/Projects/PyhtonProjects/thesis/video_data/{video_name}'
+        # folder_path = fr'D:/Projects/PyhtonProjects/thesis/video_data/{video_name}'
+        folder_path = fr'/home/wangshuo_20/pythonpr/thesis_data/video_data/{video_name}'
         path = os.path.join(folder_path, 'video')
         # 获取文件夹中所有视频的VideoCapture对象
         video_captures = self.capture_videos_in_folder(folder_path)
