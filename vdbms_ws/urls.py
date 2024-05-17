@@ -15,22 +15,32 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from seiden.views import login
+from seiden.views import login, my_obtain_jwt_token
 from seiden import views
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', login),
+    path('login/', my_obtain_jwt_token),
     path('users/', views.get_users),
+    path('users/query', views.get_query_users),
+    path('users/add', views.add_user),
+    path('users/delete', views.delete_user_by_id),
+    path('users/delete/batch', views.delete_batch_users),
+    path('users/update/url', views.update_user_profile_url),
+
     path('videos/', views.get_videos),
+    path('videos/play/<str:video_id>', views.get_video),
+    path('videos/delete', views.delete_video_by_id),
+    path('videos/delete/batch', views.delete_batch_videos),
     path('upload/', views.upload_video),
     path('videos/query', views.get_query_videos),
     path('videos/add', views.add_video),
     path('videos/id', views.get_video_by_id),
     path('videos/ids', views.get_videos_by_ids),
     path('register/', views.register),
+
     path('model/', views.get_models),
     path('model/load', views.load_data),
     path('model/exe/pre', views.exe_model_pre),

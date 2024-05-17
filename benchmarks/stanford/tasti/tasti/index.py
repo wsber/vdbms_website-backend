@@ -27,6 +27,7 @@ class Index:
         self.cache_dir = self.get_cache_dir()
         self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # 使用第二块 GPU
         self.model.to(self.device)
         self.model.eval()
         print('[device]: ', self.device)

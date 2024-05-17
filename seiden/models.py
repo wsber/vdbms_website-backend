@@ -12,7 +12,8 @@ class User(models.Model):
     role = models.CharField(max_length=10, verbose_name="角色", default="USER")
     REQUIRED_FIELDS = ['phone', 'password']
     USERNAME_FIELD = "username"
-
+    profile_url = models.URLField(max_length=200, verbose_name="视频地址")  # 新增视频地址字段
+    # token = models.FileField(max_length=255, null=True)
     class Meta:
         verbose_name = "用户信息"
         verbose_name_plural = verbose_name
@@ -28,7 +29,7 @@ class Video(models.Model):
     duration = models.CharField(max_length=20, verbose_name="视频时长")
     upload_time = models.DateTimeField(auto_now_add=True, verbose_name="上传时间")
     url = models.URLField(max_length=200, verbose_name="视频地址")  # 新增视频地址字段
-
+    uuid_name = models.CharField(max_length=100, verbose_name="视频uuid名称")
     class Meta:
         verbose_name = "视频信息"
         verbose_name_plural = "视频信息"
@@ -43,6 +44,7 @@ class VdbmsModel(models.Model):
     description = models.TextField(verbose_name="模型描述", blank=True, null=True)
     recommend = models.IntegerField(verbose_name="模型推荐度")
     upload_time = models.DateTimeField(auto_now_add=True, verbose_name="模型上传时间")
+    upload_user = models.CharField(max_length=100, verbose_name="模型上次用户")
     parameter_url = models.URLField(max_length=200, verbose_name="超参数加载地址")  # 新增视频地址字段
     class Meta:
         verbose_name = "模型信息"
