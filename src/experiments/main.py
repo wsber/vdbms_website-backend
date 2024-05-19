@@ -27,11 +27,17 @@ def execute_ekoalt_rq4(images, video_name, anchor_percentage=0.5, nb_buckets=100
     return ekoalt
 
 
-def execute_ekomab(images, video_name, keep=False, category='car', nb_buckets=10000, anchor_percentage=0.4, c_param=2,
-                   confidence_threshold=0.05, error_threshold=0.1, reacall_threshold=0.95,
-                   precision_threshold=0.95, label_propagate_al=0):
-    ekoconfig = EKOPSConfig(video_name, category=category, nb_buckets=nb_buckets, precision_threshold=0.95,
-                            reacall_threshold=0.95, label_propagate_al=label_propagate_al)
+def execute_ekomab(images, video_name, keep=False,
+                   category='car', nb_buckets=10000,
+                   anchor_percentage=0.4, c_param=2,
+                   confidence_threshold=0.95, error_threshold=0.1,
+                   reacall_threshold=0.95, precision_threshold=0.95,
+                   label_propagate_al=0):
+    ekoconfig = EKOPSConfig(video_name,
+                            category=category, nb_buckets=nb_buckets,
+                            user_confidence_threshold=confidence_threshold, user_error_threshold=error_threshold,
+                            reacall_threshold=reacall_threshold, precision_threshold=precision_threshold,
+                            label_propagate_al=label_propagate_al)
     base = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
     # directory = os.path.join(base, video_name, 'video.mp4')
     directory = os.path.join(base, video_name)

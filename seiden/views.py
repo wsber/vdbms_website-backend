@@ -3,7 +3,9 @@
 import hashlib
 import os.path
 import sys
+import zipfile
 
+from django.utils.encoding import smart_str
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework_jwt.settings import api_settings
@@ -30,6 +32,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_jwt.settings import api_settings
+from seiden_utils.getTargetFrame import extract_frames
 
 images = None  # 全局变量，初始化为 None
 
@@ -257,7 +260,7 @@ def get_video(request, video_id):
                         yield f.read()
 
                 response.streaming_content = file_iterator(video_path)
-            else :
+            else:
                 start, end = map(int, range_header.split('=')[1].split('-'))
 
                 # 处理范围错误
@@ -358,7 +361,7 @@ def add_video(request):
     print(data)
     try:
         object_video = Video(name=data['name'], description=data['description'], url=data['url'],
-                             duration=data['duration'], upload_time=data['upload_time'],uuid_name=data['uuid_name'])
+                             duration=data['duration'], upload_time=data['upload_time'], uuid_name=data['uuid_name'])
         object_video.save()
         obj_students = Video.objects.all().values()
         # 把结果转为list
@@ -407,7 +410,7 @@ def get_videos_by_ids(request):
     """
     data = json.loads(request.body.decode('utf-8'))
     id_list = data['ids']
-    videos = Video.objects.filter(id__in=id_list).values()
+    videos = Video.objects.filter(id__in=id_list).order_by('id').values()
     videos = list(videos)
     return JsonResponse({
         'code': 1,
@@ -498,6 +501,21 @@ def load_data(request):
                          }})
 
 
+def data_trans(frame_sql, selfParameters):
+    # selfParameters
+    selfParameters['alpha'] = float(selfParameters['alpha']) / 100.0
+    selfParameters['beta'] = float(selfParameters['beta']) / 100.0
+    selfParameters['cParameter'] = int(selfParameters['cParameter'])
+    selfParameters['propagateFunc'] = int(selfParameters['propagateFunc'])
+    # frame_sql
+    frame_sql['error'] = float(frame_sql['error']) / 100.0
+    frame_sql['confidence'] = float(frame_sql['confidence']) / 100.0
+    if frame_sql['precision'] is not None:
+        frame_sql['precision'] = float(frame_sql['precision']) / 100.0
+    if frame_sql['recall'] is not None:
+        frame_sql['recall'] = float(frame_sql['recall']) / 100.0
+
+
 @csrf_exempt
 def exe_model_pre(request):
     from src.experiments.main import query_process_precision
@@ -507,12 +525,17 @@ def exe_model_pre(request):
     video_name = data['video_name']
     frame_sql = data['frame_sql']
     selfParameters = data['selfParameters']
+    data_trans(frame_sql, selfParameters)
     print('[frame_sql]: ', frame_sql)
     print('[selfParameters]: ', selfParameters)
-    anchor_count = int(len_images * 0.1)
-    # try:
-    eko = execute_ekomab(images, video_name, nb_buckets=anchor_count)
-    print(anchor_count)
+    beta = selfParameters['beta']
+    anchor_count = int(len_images * beta)
+    eko = execute_ekomab(images, video_name, nb_buckets=anchor_count,
+                         anchor_percentage=selfParameters['alpha'], c_param=selfParameters['cParameter'],
+                         confidence_threshold=frame_sql['confidence'], error_threshold=frame_sql['error'],
+                         reacall_threshold=frame_sql['recall'], precision_threshold=frame_sql['precision'],
+                         label_propagate_al=selfParameters['propagateFunc']
+                         )
     times, result = query_process_precision(eko, dnn_invocation=anchor_count, images=images)
     pre_result = {'inds': [int(ind) for ind in result['inds']], 'y_pred': [float(pred) for pred in result['y_pred']]}
     # 遍历字典的键值对
@@ -522,15 +545,14 @@ def exe_model_pre(request):
     #     # 输出键值对的键、值和数据类型
     #     print(f"Key: {key}, Value: {value}, Type: {value_type}")
     # 将字典 result 转换为 JSON 字符串
-    result_json = json.dumps(pre_result)
+    # result_json = json.dumps(pre_result)
+    eko.save_index_cache()
     print('[Here has executed the pre al]')
     return JsonResponse({
         'code': 1,
-        'data': result_json,
+        'data': pre_result,
         'msg': 'exe pre complete successfully'
     })
-    # except Exception as e:
-    #     return JsonResponse({'code': -1, 'msg': '失败' + str(e)})
 
 
 @csrf_exempt
@@ -577,3 +599,116 @@ def exe_model_agg(request):
         })
     except Exception as e:
         return JsonResponse({'code': -1, 'msg': '失败' + str(e)})
+
+
+from seiden_utils.video_decompression import DecompressionModule
+
+
+@csrf_exempt
+def download_result(request):
+    base_path = "/home/wangshuo_20/pythonpr/VDBMS_ws/media/outData"
+    data = json.loads(request.body.decode('utf-8'))
+    videos = data.get('videos', [])
+    modelOutput = data
+    targetFrames = modelOutput.get('inds', [])
+    resultFormatSetting = modelOutput['resultFormatSetting']
+
+    video_uuid_name = videos[0]['uuid_name']
+    video_uuid_name_prefix = video_uuid_name.split('.')[0]
+    folder_path = create_folder(base_path, video_uuid_name_prefix)
+    # 视频文件路径
+    video_path = fr"/home/wangshuo_20/pythonpr/VDBMS_ws/media/{video_uuid_name}"
+    # 帧编号序列（从0开始）
+    frame_numbers = targetFrames
+    #
+    # 输出文件夹路径
+    output_folder = folder_path
+    print('[videos]: ', videos)
+    print('[targetFrames]: ', targetFrames)
+    print('[folder_path]: ', folder_path)
+    print('[resultFormatSetting]: ', resultFormatSetting)
+    # 输出结果
+    image_results = []
+    txt_file_path = ''
+    txt_media_path = None
+    zip_media_path = None
+    if resultFormatSetting['txtIsDownload']:
+        txt_media_path = fr"media/outData/{video_uuid_name_prefix}/{resultFormatSetting['txtName']}.txt"
+        txt_file_path = fr"/home/wangshuo_20/pythonpr/VDBMS_ws/" + txt_media_path
+        save_target_frames_id_to_txt(targetFrames, txt_file_path)
+    if resultFormatSetting['slideshow']:
+        # 提取并保存指定帧
+        dc = DecompressionModule()
+        image_results = dc.convert_and_save_by_frame_Id(video_path, output_folder, frame_numbers,
+                                                        video_uuid_name_prefix)
+        print('[image_results]: ', image_results)
+    if resultFormatSetting['targetImagesIsDownload']:
+        folder_path = os.path.join(settings.MEDIA_ROOT, fr'outData/{video_uuid_name_prefix}')
+        zip_filename = resultFormatSetting['targetImagesSetName'] + '.zip'
+        zip_media_path = fr"media/outData/zips/" + zip_filename
+        zip_path = os.path.join(settings.MEDIA_ROOT, 'outData/zips/' + zip_filename)
+        # Create a zip file
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipdir(folder_path, zipf)
+    return JsonResponse({
+        'code': 1,
+        'data': image_results,
+        'msg': 'download_result successfully',
+        'txt_file_path': txt_media_path,
+        'zip_file_path': zip_media_path
+    })
+
+
+def create_folder(path, folder_name):
+    """
+    创建一个新的文件夹。
+    Args:
+        path: 要创建文件夹的路径。
+        folder_name: 要创建的文件夹的名称。
+    """
+    # 拼接文件夹路径
+    folder_path = os.path.join(path, folder_name)
+
+    # 检查文件夹是否已经存在
+    if not os.path.exists(folder_path):
+        # 如果不存在，创建文件夹
+        os.makedirs(folder_path)
+        print(f"文件夹 '{folder_name}' 创建成功。")
+    else:
+        print(f"文件夹 '{folder_name}' 已经存在。")
+    print('[folder_path]: ', folder_path)
+    return folder_path
+
+
+def save_target_frames_id_to_txt(targetFrames, file_name):
+    # 将数组写入文本文件
+    with open(file_name, 'w') as f:
+        for frame in targetFrames:
+            f.write(str(frame) + '\n')
+
+    print(f"Array saved to {file_name}")
+
+def zipdir(path, ziph):
+    # Zip the directory
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            arcname = os.path.relpath(file_path, start=path)
+            ziph.write(file_path, arcname)
+
+
+def download_zip(request):
+    folder_path = os.path.join(settings.MEDIA_ROOT, 'outData/fa5455dab7e753b865910684f9d81a19')
+    zip_filename = 'result.zip'
+    zip_path = os.path.join(settings.MEDIA_ROOT, zip_filename)
+
+    # Create a zip file
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        zipdir(folder_path, zipf)
+
+    # Serve the file
+    with open(zip_path, 'rb') as fh:
+        response = HttpResponse(fh.read(), content_type="application/zip")
+        response['Content-Disposition'] = f'attachment; filename={smart_str(zip_filename)}'
+        response['Content-Encoding'] = 'utf-8'
+        return response

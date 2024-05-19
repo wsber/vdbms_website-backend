@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'seiden',
     'rest_framework',
     'rest_framework_jwt',
+    'channels',
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

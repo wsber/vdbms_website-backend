@@ -46,6 +46,7 @@ urlpatterns = [
     path('model/exe/pre', views.exe_model_pre),
     path('model/exe/rec', views.exe_model_rec),
     path('model/exe/agg', views.exe_model_agg),
+    path('model/result/download', views.download_result),
 ]
 # 允许所有的上传文件media文件被访问
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -4,25 +4,18 @@ In this file, we implement a method to fit the alpha, beta values used in eko_wr
 @jaehobang
 """
 
-
-
-
-
-
-
 import os
 import torch
 import numpy as np
 import torchvision
 import sys
+
 sys.path.append('/nethome/jbang36/seiden')
 
 from sklearn.linear_model import LinearRegression
 
-
 from benchmarks.stanford.tasti.tasti.index import Index
 from benchmarks.stanford.tasti.tasti.config import IndexConfig
-
 
 from benchmarks.stanford.tasti.tasti.seiden.data.data_loader import ImageDataset, LabelDataset
 from tqdm import tqdm
@@ -30,14 +23,10 @@ import time
 from src.motivation.tasti_wrapper import InferenceDataset
 
 
-
 class EKO_PS(Index):
     def __init__(self, config, images):
         self.images = images
         super().__init__(config)
-
-
-
 
     ###############################################
     ###### Repframe selection -- High Level #######
@@ -61,15 +50,12 @@ class EKO_PS(Index):
             self.topk_reps = np.load(os.path.join(self.cache_dir, 'topk_reps.npy'))
             self.topk_dists = np.load(os.path.join(self.cache_dir, 'topk_dists.npy'))
 
-
-
     def calculate_rep_methodology(self):
         rep_indices, dataset_length = self.get_reps()  ### we need to sort the reps
         top_reps = self.calculate_top_reps(dataset_length, rep_indices)
         top_dists = self.calculate_top_dists(dataset_length, rep_indices, top_reps)
 
         return rep_indices, top_reps, top_dists
-
 
     def get_reps(self):
         """
@@ -90,18 +76,16 @@ class EKO_PS(Index):
 
         rep_indices = np.arange(dataset_length, dtype=np.int32)[::skip_rate]
         tmp_buffer = int(n_reps * 0.1)
-        assert(n_reps + tmp_buffer >= len(rep_indices) / self.config.rep_ratio)
+        assert (n_reps + tmp_buffer >= len(rep_indices) / self.config.rep_ratio)
         print(f'rep indices stats', n_reps, len(rep_indices))
         rep_indices = rep_indices.tolist()
         rep_indices.append(dataset_length - 1)
 
         rep_indices = self.get_additional_anchors(rep_indices, n_reps)
-        assert(len(set(rep_indices)) == n_reps)
+        assert (len(set(rep_indices)) == n_reps)
         ## make sure all the rep indices are different and total length matches what we requested
 
         return rep_indices, dataset_length
-
-
 
     def calculate_top_reps(self, dataset_length, rep_indices):
         """
@@ -143,8 +127,7 @@ class EKO_PS(Index):
 
         return top_dists
 
-
-    def get_additional_anchors(self, rep_indices:list, n_reps):
+    def get_additional_anchors(self, rep_indices: list, n_reps):
         dataset_length = len(self.images)
         all_images = self.images
         images_downsampled = []
@@ -166,26 +149,26 @@ class EKO_PS(Index):
         pixel_uncertainty = self.calculate_pixel_uncertainty(images_downsampled, rep_indices, dataset_length)
         temporal_uncertainty = self.calculate_temporal_uncertainty(images_downsampled, rep_indices, dataset_length)
 
-
-
-        for _ in tqdm(range(n_reps - curr_size), desc = "Choosing Other Rep Indices.."):
+        for _ in tqdm(range(n_reps - curr_size), desc="Choosing Other Rep Indices.."):
             normalized_pixel_uncertainty = pixel_uncertainty / pixel_uncertainty.max()
             normalized_temporal_uncertainty = temporal_uncertainty / temporal_uncertainty.max()
             final_uncertainty = alpha * normalized_pixel_uncertainty + beta * normalized_temporal_uncertainty
             ### update the selection process, now it's not argmax anymore, we need to apply min to every row
-            final_uncertainty = final_uncertainty.min(axis = 1)
+            final_uncertainty = final_uncertainty.min(axis=1)
             chosen_rep = np.argmax(final_uncertainty)
-            assert(chosen_rep not in rep_indices)
-            left_rep, right_rep = self._get_closest_reps(rep_indices, chosen_rep) ### there will ALWAYS be a left and right
-            assert(left_rep in rep_indices)
-            assert(right_rep in rep_indices)
+            assert (chosen_rep not in rep_indices)
+            left_rep, right_rep = self._get_closest_reps(rep_indices,
+                                                         chosen_rep)  ### there will ALWAYS be a left and right
+            assert (left_rep in rep_indices)
+            assert (right_rep in rep_indices)
             right_rep_idx = rep_indices.index(right_rep)
             chosen_rep_idx = right_rep_idx
             rep_indices.insert(chosen_rep_idx, chosen_rep)
 
-            distance_uncertainty = self.update_pixel_uncertainty(pixel_uncertainty, images_downsampled, left_rep, chosen_rep, right_rep)
-            temporal_uncertainty = self.update_temporal_uncertainty(temporal_uncertainty, images_downsampled, left_rep, chosen_rep, right_rep)
-
+            distance_uncertainty = self.update_pixel_uncertainty(pixel_uncertainty, images_downsampled, left_rep,
+                                                                 chosen_rep, right_rep)
+            temporal_uncertainty = self.update_temporal_uncertainty(temporal_uncertainty, images_downsampled, left_rep,
+                                                                    chosen_rep, right_rep)
 
         self.t_uncertainty = normalized_temporal_uncertainty
         self.d_uncertainty = normalized_pixel_uncertainty
@@ -193,19 +176,15 @@ class EKO_PS(Index):
         rep_indices = sorted(rep_indices)
         return rep_indices
 
-
-
-
     def _get_closest_reps(self, rep_indices, curr_idx):
         result = []
 
         for i, rep_idx in enumerate(rep_indices):
             if rep_idx - curr_idx >= 0:
-                result.append(rep_indices[i-1])
+                result.append(rep_indices[i - 1])
                 result.append(rep_indices[i])
                 break
         return result
-
 
     ################################################
     ###### Parameter Optimization Functions ########
@@ -214,9 +193,9 @@ class EKO_PS(Index):
     def compute_alpha_beta(self, images, n_reps):
         n_sample = int(n_reps * 0.3)
         choices = np.arange(len(images))
-        random_indices = np.random.choice(choices, n_sample, replace = False)
+        random_indices = np.random.choice(choices, n_sample, replace=False)
         random_indices = sorted(random_indices)
-        assert(len(set(random_indices)) == len(random_indices))
+        assert (len(set(random_indices)) == len(random_indices))
 
         #### now we compute the matrix
         x, debug = self.generate_matrix(images, random_indices)
@@ -259,14 +238,14 @@ class EKO_PS(Index):
             j = i + 1
             idx_i = random_indices[i]
             idx_j = random_indices[j]
-            assert((idx_j, idx_i) not in done)
+            assert ((idx_j, idx_i) not in done)
 
             ## compute the pixel difference
             i1 = images[idx_i]
             i2 = images[idx_j]
             pixel_diff = np.linalg.norm(i1 - i2)
             temp_diff = abs(idx_i - idx_j)
-            done[(idx_i,idx_j)] = [pixel_diff, temp_diff]
+            done[(idx_i, idx_j)] = [pixel_diff, temp_diff]
             pixel_distances.append(pixel_diff)
             temporal_distances.append(temp_diff)
 
@@ -274,12 +253,11 @@ class EKO_PS(Index):
         pixel_distances = pixel_distances / pixel_distances.max()
         temporal_distances = np.array(temporal_distances)
         temporal_distances = temporal_distances / temporal_distances.max()
-        assert(pixel_distances.max() == 1)
-        assert(temporal_distances.max() == 1)
+        assert (pixel_distances.max() == 1)
+        assert (temporal_distances.max() == 1)
 
         x = np.stack([pixel_distances, temporal_distances])
         return x.T, done
-
 
     ######################################################
     ###### Frame Selection Functions #####################
@@ -289,7 +267,7 @@ class EKO_PS(Index):
         distance = np.zeros((dataset_length, 2))
         rep_indices = sorted(rep_indices)
         for i in range(dataset_length):
-            if i in rep_indices: continue ## if already selected, distance = 0
+            if i in rep_indices: continue  ## if already selected, distance = 0
             left, right = self._get_closest_reps(rep_indices, i)
             curr_image = all_images[i]
             left_image = all_images[left]
@@ -299,7 +277,6 @@ class EKO_PS(Index):
             distance[i][0] = first
             distance[i][1] = second
         return distance
-
 
     def calculate_temporal_uncertainty(self, all_images, rep_indices, dataset_length):
         temporal_distance = np.zeros((dataset_length, 2))
@@ -315,7 +292,7 @@ class EKO_PS(Index):
         return temporal_distance
 
     def update_pixel_uncertainty(self, pixel_uncertainty, images_downsampled, left_rep, middle_rep, right_rep):
-        for i in range(left_rep+1, right_rep):
+        for i in range(left_rep + 1, right_rep):
             if i == middle_rep:
                 pixel_uncertainty[i][0] = 0
                 pixel_uncertainty[i][1] = 0
@@ -334,12 +311,10 @@ class EKO_PS(Index):
                 pixel_uncertainty[i][0] = np.linalg.norm(left_image - curr_image)
                 pixel_uncertainty[i][1] = np.linalg.norm(right_image - curr_image)
 
-
-
         return pixel_uncertainty
 
     def update_temporal_uncertainty(self, temporal_uncertainty, images_downsampled, left_rep, middle_rep, right_rep):
-        for i in range(left_rep+1, right_rep):
+        for i in range(left_rep + 1, right_rep):
             if i == middle_rep:
                 temporal_uncertainty[i][0] = 0
                 temporal_uncertainty[i][1] = 0
@@ -381,7 +356,6 @@ class EKO_PS(Index):
         model = torch.nn.Identity()
         return model
 
-
     def get_embedding_dnn(self):
         model = torchvision.models.resnet18(pretrained=True, progress=True)
         model.fc = torch.nn.Linear(512, 128)
@@ -390,8 +364,6 @@ class EKO_PS(Index):
     def get_embedding_dnn_dataset(self, train_or_test):
         dataset = InferenceDataset(self.images)
         return dataset
-
-
 
     def get_pretrained_embedding_dnn(self):
         '''
@@ -402,10 +374,10 @@ class EKO_PS(Index):
         return model
 
 
-
 class EKOPSConfig(IndexConfig):
-    def __init__(self, dataset_name, category = 'car', nb_buckets = 7000, rep_ratio = 0.1,precision_threshold=0.95,reacall_threshold =0.95,
-                 label_propagate_al = 0):
+    def __init__(self, dataset_name, category='car', nb_buckets=7000, rep_ratio=0.1, precision_threshold=0.95,
+                 reacall_threshold=0.95, user_confidence_threshold=0.95, user_error_threshold=0.1,
+                 label_propagate_al=0):
         super().__init__()
         self.do_mining = False
         self.do_training = False
@@ -430,11 +402,9 @@ class EKOPSConfig(IndexConfig):
         self.rep_ratio = rep_ratio
 
         # 下面是置信度，误差限，期望查准率，期望查全率
-        self.user_confidence_threshold = 0.95
-        self.user_error_threshold = 0.1
+        self.user_confidence_threshold = user_confidence_threshold
+        self.user_error_threshold = user_error_threshold
         self.user_recall_threshold = reacall_threshold
         self.user_precision_threshold = precision_threshold
         # 下面时标签传播过程中采用的算法选择: 0为线性， 1为simoid插值
         self.label_propagate_al = label_propagate_al
-
-

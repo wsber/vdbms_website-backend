@@ -60,6 +60,28 @@ class DecompressionModule:
 
         print(f"Saved {load_directory} to {save_directory}")
 
+    def convert_and_save_by_frame_Id(self, load_directory, save_directory, frame_ids, video_uuid_name):
+        vid_ = cv2.VideoCapture(load_directory)
+        frame_count = int(vid_.get(cv2.CAP_PROP_FRAME_COUNT))
+        ## let's cap the frame_count to 300k
+        ### no when we do convert and save, we load one and save and repeat
+        k = 0
+        imagesName = []
+        for i in tqdm(range(frame_count)):
+            success, image = vid_.read()
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = Image.fromarray(image)
+            if i == frame_ids[k]:
+                save_filename = os.path.join(save_directory, '{:09d}.jpg'.format(k))
+                imagesName.append(fr'media/outData/{video_uuid_name}/' + '{:09d}.jpg'.format(k))
+                image.save(save_filename)
+                k += 1
+                if k == len(frame_ids):
+                    break
+
+        print(f"Saved {load_directory} to {save_directory}")
+        return imagesName
+
     # convert2images 方法用于将视频转换为图像矩阵，并返回图像矩阵。
     # 在转换过程中，会根据指定的帧数限制和尺寸对图像进行调整，并将其存储在image_matrix中。
     def convert2images(self, path, frame_count_limit=300000, size=[234, 416]):
@@ -172,7 +194,7 @@ class DecompressionModule:
 
             error_indices = []
 
-            for i in tqdm(range(frame_count),desc='video processing'):
+            for i in tqdm(range(frame_count), desc='video processing'):
                 success, image = self.vid_.read()
                 if not success:
                     print(f"Image {i} retrieval has failed")
