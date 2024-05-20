@@ -77,7 +77,7 @@ class SystemTool:
         except Exception as e:
             print(f"Error: 删除文件时发生异常: {str(e)}")
 
-    def save_tasti_times(self,model_name, tasti_times,num):
+    def save_tasti_times(self, model_name, tasti_times, num):
         # 构建保存的字符串格式
         data_str = f"'{model_name}' : {tasti_times}\n"
         # 文件路径
@@ -88,7 +88,8 @@ class SystemTool:
         # 打开文件，追加写入数据
         with open(file_path, 'a') as file:
             file.write(data_str)
-    def save_precison_recall(self,query_pattern,result,num):
+
+    def save_precison_recall(self, query_pattern, result, num):
         # 构建保存的字符串格式
         data_str = f"'{query_pattern}' : {result['precision']}  ,{result['recall']}  ,{result['actual_estimate']}\n"
         # 文件路径
@@ -99,7 +100,7 @@ class SystemTool:
         with open(file_path, 'a') as file:
             file.write(data_str)
 
-    def save_agg(self,query_pattern,result,num):
+    def save_agg(self, query_pattern, result, num):
         # 构建保存的字符串格式
         data_str = f"'{query_pattern}' : {result['initial_estimate']} ,{result['blazeit_estimate']} ,{result['actual_estimate']}  \n"
         # 文件路径
@@ -109,7 +110,6 @@ class SystemTool:
         # 打开文件，追加写入数据
         with open(file_path, 'a') as file:
             file.write(data_str)
-
 
 
 ##################################
@@ -132,6 +132,7 @@ def evaluate_object_detection(gt_file, dt_file):
 ###################################
 THROUGHPUT = 1 / 140
 
+
 def query_process_aggregate_yolov(result):
     st = time.perf_counter()
     times = []
@@ -142,8 +143,9 @@ def query_process_aggregate_yolov(result):
         ct += len(its)
     et = time.perf_counter()
     times.append(et - st)
-    print('[cars_number]: ',ct)
+    print('[cars_number]: ', ct)
     return ct
+
 
 def query_process_aggregate(index, images=None):
     st = time.perf_counter()
@@ -159,7 +161,7 @@ def query_process_aggregate(index, images=None):
     return times, result
 
 
-def query_process_precision(index, dnn_invocation=1000,images=None):
+def query_process_precision(index, dnn_invocation=1000, images=None):
     st = time.perf_counter()
     times = []
 

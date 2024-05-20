@@ -15,6 +15,8 @@ We will implement three different optimizations
 
 3. MAB -- this replaces the alternating exploration and exploitation method we currently have.
 """
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 """
 cluster_dict 是用于存储每个时间片段（cluster）的信息的字典。它的每个元素表示一个时间片段，其中键是时间片段的起始和结束索引对，值是包含该时间片段内帧的索引、帧的得分以及时间片段的距离（奖励）的字典。
@@ -242,13 +244,34 @@ class EKO_mab(EKO_alternate):
         print("[rep_indices] :", len(rep_indices))
         cluster_dict = self.init_label_distances(rep_indices, target_dnn_cache, scoring_func, length)
         # 迭代选择新的代表帧，直到达到指定的代表帧数量。
+        all_num = n_reps - curr_len
+        update_step_length = float((all_num)) * 0.025
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "algorithm_type_group",
+            {
+                "type": "algorithm.update",
+                "algorithm_type": 'mab_sampling',
+                "consumer_type": 'algorithm_type'
+            }
+        )
         for i in tqdm(range((n_reps - curr_len)), desc='MABSampling: Here exe select N-alpha*N times MABSampling'):
             # 通过多臂赌博机（MAB）进行迭代选择新的代表帧：在每次迭代中，调用 select_rep 函数从簇中选择新的代表帧，并更新簇的信息。选择代表帧的方式通过多臂赌博机算法进行，
             # 具体的选择依赖于每个簇的奖励和探索因子。随着迭代的进行，新的代表帧会被加入到 rep_indices 中，并更新 cluster_dict。
             new_rep, cluster_key = self.select_rep(cluster_dict, rep_indices)
             rep_indices.append(new_rep)
             cluster_dict = self.update(cluster_dict, cluster_key, new_rep, target_dnn_cache, scoring_func)
-
+            if i % 10 == 0 or i == all_num -1:
+                progress = (i + 1) / all_num * 100
+                # print('[progress]: ', progress)
+                async_to_sync(channel_layer.group_send)(
+                    "progress_group",
+                    {
+                        "type": "progress.update",
+                        "progress": progress,
+                        "algorithm_type": 'mab_sampling'
+                    }
+                )
         rep_indices = sorted(rep_indices)
         assert (len(rep_indices) == len(set(rep_indices)))
 

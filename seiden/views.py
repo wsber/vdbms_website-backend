@@ -5,6 +5,8 @@ import os.path
 import sys
 import zipfile
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.utils.encoding import smart_str
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -151,13 +153,22 @@ def get_query_users(requset):
 @csrf_exempt
 def add_user(request):
     data = json.loads(request.body.decode('utf-8'))
-    # 对密码进行哈希加密
+    # 对密码进行哈希加密，如果存在
     hashed_password = make_password(data['password'])
-    print(data)
+    data['password'] = hashed_password
+    print('[user_data]: ', data)
     try:
-        object_user = User(name=data['name'], username=data['username'], profile_url=data['profile_url'],
-                           email=data['email'], role=data['role'], phone=data['phone'], password=hashed_password)
-        object_user.save()
+        if 'id' in data:
+            # 更新用户信息
+            user = User.objects.get(id=data['id'])
+            for key, value in data.items():
+                if key != 'id':
+                    setattr(user, key, value)
+            user.save()
+        else:
+            object_user = User(name=data['name'], username=data['username'], profile_url=data['profile_url'],
+                               email=data['email'], role=data['role'], phone=data['phone'], password=hashed_password)
+            object_user.save()
         obj_students = User.objects.all().values()
         # 把结果转为list
         students = list(obj_students)
@@ -179,7 +190,7 @@ def update_user_profile_url(request):
     user.save()
     return JsonResponse({
         'code': 1,
-        'mag': '头像更新成功'
+        'msg': '头像更新成功'
     })
 
 
@@ -360,15 +371,23 @@ def add_video(request):
     data = json.loads(request.body.decode('utf-8'))
     print(data)
     try:
-        object_video = Video(name=data['name'], description=data['description'], url=data['url'],
-                             duration=data['duration'], upload_time=data['upload_time'], uuid_name=data['uuid_name'])
-        object_video.save()
-        obj_students = Video.objects.all().values()
+        if 'id' in data:
+            video = Video.objects.get(id=data['id'])
+            for key, value in data.items():
+                if key != 'id':
+                    setattr(video, key, value)
+            video.save()
+        else:
+            object_video = Video(name=data['name'], description=data['description'], url=data['url'],
+                                 duration=data['duration'], upload_time=data['upload_time'],
+                                 uuid_name=data['uuid_name'])
+            object_video.save()
+        obj_videos = Video.objects.all().values()
         # 把结果转为list
-        students = list(obj_students)
+        obj_videos = list(obj_videos)
         return JsonResponse({
             'code': 1,
-            'data': students
+            'data': obj_videos
         })
     except Exception as e:
         return JsonResponse({'code': -1, 'msg': '失败' + str(e)})
@@ -546,7 +565,7 @@ def exe_model_pre(request):
     #     print(f"Key: {key}, Value: {value}, Type: {value_type}")
     # 将字典 result 转换为 JSON 字符串
     # result_json = json.dumps(pre_result)
-    eko.save_index_cache()
+    # eko.save_index_cache()
     print('[Here has executed the pre al]')
     return JsonResponse({
         'code': 1,
@@ -688,27 +707,50 @@ def save_target_frames_id_to_txt(targetFrames, file_name):
 
     print(f"Array saved to {file_name}")
 
+
 def zipdir(path, ziph):
     # Zip the directory
+    # for root, dirs, files in os.walk(path):
+    #     for file in files:
+    #         file_path = os.path.join(root, file)
+    #         arcname = os.path.relpath(file_path, start=path)
+    #         ziph.write(file_path, arcname)
+    """压缩目录
+       Args:
+           path (str): 要压缩的目录路径
+           ziph (ZipFile): ZipFile对象，用于写入文件
+       """
+    # 获取所有文件路径
+    file_paths = []
     for root, dirs, files in os.walk(path):
         for file in files:
-            file_path = os.path.join(root, file)
+            file_paths.append(os.path.join(root, file))
+    k = 0
+    channel_layer = get_channel_layer()
+    update_step_length = int(float(len(file_paths)) * 0.025)
+    async_to_sync(channel_layer.group_send)(
+        "algorithm_type_group",
+        {
+            "type": "algorithm.update",
+            "algorithm_type": 'zip_frames',
+            "consumer_type": 'algorithm_type'
+        }
+    )
+    # 使用 tqdm 显示进度条
+    with tqdm(total=len(file_paths), unit='file', desc="压缩中...") as pbar:
+        for file_path in file_paths:
             arcname = os.path.relpath(file_path, start=path)
             ziph.write(file_path, arcname)
-
-
-def download_zip(request):
-    folder_path = os.path.join(settings.MEDIA_ROOT, 'outData/fa5455dab7e753b865910684f9d81a19')
-    zip_filename = 'result.zip'
-    zip_path = os.path.join(settings.MEDIA_ROOT, zip_filename)
-
-    # Create a zip file
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        zipdir(folder_path, zipf)
-
-    # Serve the file
-    with open(zip_path, 'rb') as fh:
-        response = HttpResponse(fh.read(), content_type="application/zip")
-        response['Content-Disposition'] = f'attachment; filename={smart_str(zip_filename)}'
-        response['Content-Encoding'] = 'utf-8'
-        return response
+            pbar.update(1)  # 更新进度条
+            if k % update_step_length == 0 or k == len(file_paths) - 1:
+                progress = (k + 1) / len(file_paths) * 100
+                # print('[progress]: ', progress)
+                async_to_sync(channel_layer.group_send)(
+                    "progress_group",
+                    {
+                        "type": "progress.update",
+                        "progress": progress,
+                        "algorithm_type": 'zip_frames'
+                    }
+                )
+            k += 1

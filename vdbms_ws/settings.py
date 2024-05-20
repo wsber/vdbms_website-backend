@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'seiden',
     'rest_framework',
     'rest_framework_jwt',
+    # 'daphne',
     'channels',
 ]
 REST_FRAMEWORK = {
@@ -91,7 +92,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'vdbms_ws.wsgi.application'
-
+ASGI_APPLICATION = 'vdbms_ws.asgi.application'
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    },
+}
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -192,6 +198,7 @@ CORS_ALLOW_HEADERS = (
     'x-csrftoken',
     'x-requested-with',
     'Pragma',
+    'token'
 )
 # settings.py
 ALLOWED_HOSTS = ['192.168.127.12', 'localhost', '127.0.0.1', '', '59.72.109.26']

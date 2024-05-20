@@ -4,6 +4,9 @@ import tasti
 import numpy as np
 import os
 import csv
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from tqdm.autonotebook import tqdm
 
 
@@ -339,8 +342,32 @@ class Index:
         # print(self.reps)
         # for rep in tqdm(self.reps, desc='Target DNN Invocations'):
         #     self.target_dnn_cache[rep]
+        k = 0
+        len_reps = len(self.reps)
+        channel_layer = get_channel_layer()
+        update_step_length = int(float(len_reps) * 0.05)
+        async_to_sync(channel_layer.group_send)(
+            "algorithm_type_group",
+            {
+                "type": "algorithm.update",
+                "algorithm_type": 'index_construct',
+                "consumer_type": 'algorithm_type'
+            }
+        )
         for rep in tqdm(self.reps, desc='generate index_cache'):
             self.run_oracle_model(rep)
+            if k % 10 == 0 or k == len_reps -1:
+                progress = (k + 1) / len_reps * 100
+                # print('[progress]: ', progress)
+                async_to_sync(channel_layer.group_send)(
+                    "progress_group",
+                    {
+                        "type": "progress.update",
+                        "progress": progress,
+                        "algorithm_type": 'index_construct'
+                    }
+                )
+            k += 1
 
     # def run_oracle_model(self,rep):
     #     print('running oracle ws')

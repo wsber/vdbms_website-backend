@@ -12,6 +12,8 @@ import time
 from seiden_utils.logger import Logger
 from PIL import Image
 from tqdm import tqdm
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 # 以上代码定义了一个名为 DecompressionModule 的类，用于处理视频文件的解压缩和转换成图像序列。
@@ -66,17 +68,46 @@ class DecompressionModule:
         ## let's cap the frame_count to 300k
         ### no when we do convert and save, we load one and save and repeat
         k = 0
+        update_step_length = int(float(frame_count) * 0.025)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "algorithm_type_group",
+            {
+                "type": "algorithm.update",
+                "algorithm_type": 'extract_frames',
+                "consumer_type": 'algorithm_type'
+            }
+        )
         imagesName = []
         for i in tqdm(range(frame_count)):
             success, image = vid_.read()
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             image = Image.fromarray(image)
+            if i % update_step_length == 0 or i == frame_count - 1:
+                progress = (i + 1) / frame_count * 100
+                # print('[progress]: ', progress)
+                async_to_sync(channel_layer.group_send)(
+                    "progress_group",
+                    {
+                        "type": "progress.update",
+                        "progress": progress,
+                        "algorithm_type": 'extract_frames'
+                    }
+                )
             if i == frame_ids[k]:
                 save_filename = os.path.join(save_directory, '{:09d}.jpg'.format(k))
                 imagesName.append(fr'media/outData/{video_uuid_name}/' + '{:09d}.jpg'.format(k))
                 image.save(save_filename)
                 k += 1
                 if k == len(frame_ids):
+                    async_to_sync(channel_layer.group_send)(
+                        "progress_group",
+                        {
+                            "type": "progress.update",
+                            "progress": 100,
+                            "algorithm_type": 'extract_frames'
+                        }
+                    )
                     break
 
         print(f"Saved {load_directory} to {save_directory}")
@@ -116,7 +147,17 @@ class DecompressionModule:
         self.image_matrix = np.ndarray(shape=(frame_count, height, width, channels), dtype=np.uint8)
 
         error_indices = []
-
+        channel_layer = get_channel_layer()
+        update_step_length = int(float(frame_count) * 0.025)
+        async_to_sync(channel_layer.group_send)(
+            "algorithm_type_group",
+            {
+                "type": "algorithm.update",
+                "algorithm_type": 'data_load',
+                "consumer_type": 'algorithm_type'
+            }
+        )
+        print('[update_step_length]: ', update_step_length)
         for i in tqdm(range(frame_count)):
             success, image = self.vid_.read()
             if not success:
@@ -128,6 +169,17 @@ class DecompressionModule:
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
                 self.image_matrix[i, :, :, :] = image  # stored in rgb format
+            if i % update_step_length == 0 or i == frame_count - 1:
+                progress = (i + 1) / frame_count * 100
+                # print('[progress]: ', progress)
+                async_to_sync(channel_layer.group_send)(
+                    "progress_group",
+                    {
+                        "type": "progress.update",
+                        "progress": progress,
+                        "algorithm_type": 'data_load'
+                    }
+                )
 
         ### let's do error fixing
         """
