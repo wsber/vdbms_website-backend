@@ -39,7 +39,8 @@ class MotivationTasti(Index):
         return 1
 
     def get_cache_dir(self):
-        return '/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/tasti_triplet'
+        return '/home/wangshuo_20/pythonpr/VDBMS_ws/media/videoCacheData/tasti_triplet'
+        # return '/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/tasti_triplet'
         # return 'D:/Projects/PyhtonProjects/thesis/tasti_data/cache/tasti_triplet'
 
     def get_target_dnn(self):
@@ -72,7 +73,8 @@ class MotivationTasti(Index):
         return self.get_target_dnn_dataset(train_or_test)
 
     def override_target_dnn_cache(self, target_dnn_cache, train_or_test):
-        root = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
+        root = '/home/wangshuo_20/pythonpr/VDBMS_ws/media'
+        # root = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
         # root = 'D:/Projects/PyhtonProjects/thesis/video_data'
         ROOT_DATA = self.config.video_name
         if self.config.category == 'car':

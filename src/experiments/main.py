@@ -38,7 +38,8 @@ def execute_ekomab(images, video_name, keep=False,
                             user_confidence_threshold=confidence_threshold, user_error_threshold=error_threshold,
                             reacall_threshold=reacall_threshold, precision_threshold=precision_threshold,
                             label_propagate_al=label_propagate_al)
-    base = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
+    # base = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
+    base = '/home/wangshuo_20/pythonpr/VDBMS_ws/media'
     # directory = os.path.join(base, video_name, 'video.mp4')
     directory = os.path.join(base, video_name)
     print(directory)

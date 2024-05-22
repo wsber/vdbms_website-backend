@@ -12,7 +12,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework_jwt.settings import api_settings
 
-sys.path.append('/home/wangshuo_20/pythonpr/seiden_ws')
+sys.path.append('/home/wangshuo_20/pythonpr/VDBMS_ws')
+# sys.path.append('/home/wangshuo_20/pythonpr/seiden_ws')
 import uuid
 from django.contrib.auth.hashers import make_password, check_password
 from django.forms import model_to_dict
@@ -61,6 +62,7 @@ def my_obtain_jwt_token(request):
         token = jwt_encode_handler(payload)
         # 自定义响应
         return Response({
+            'code': 1,
             'token': token,
             'user': {
                 'id': user.id,
@@ -73,7 +75,7 @@ def my_obtain_jwt_token(request):
         }, status=status.HTTP_200_OK)
     else:
         # 验证失败，返回错误响应
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'error': 'Invalid credentials', 'code': -1})
 
 
 # 引入json模块 JsonResponse
@@ -96,6 +98,8 @@ def login(request):
         return JsonResponse({'code': -1, 'msg': '登录失败'})
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
 @csrf_exempt
 def register(request):
     data = json.loads(request.body.decode('utf-8'))
@@ -239,65 +243,6 @@ def delete_batch_users(request):
 '''
     Video Module
 '''
-
-
-@csrf_exempt
-def get_video(request, video_id):
-    # 获取视频文件路径
-    video_path = os.path.join('/home/wangshuo_20/pythonpr/VDBMS_ws/media',
-                              '4d63ea26233716e25480b0bac2b12003' + '.mp4')  # 替换为你的实际路径
-
-    # 检查文件是否存在
-    if not os.path.exists(video_path):
-        return HttpResponse("Video not found", status=404)
-
-    # 获取文件大小
-    file_size = os.path.getsize(video_path)
-
-    # 设置响应头信息
-    response = StreamingHttpResponse(content_type='video/mp4')
-    response['Accept-Ranges'] = 'bytes'  # 支持断点续传
-    response['Content-Length'] = file_size  # 设置文件大小
-
-    # 处理请求范围（断点续传）
-    if request.headers.get('range'):
-        range_header = request.headers.get('range')
-        print(range_header)
-        if 'bytes=' in range_header:
-            if range_header == 'bytes=0-':
-                # 读取整个文件
-                def file_iterator(file_path):
-                    with open(file_path, 'rb') as f:
-                        yield f.read()
-
-                response.streaming_content = file_iterator(video_path)
-            else:
-                start, end = map(int, range_header.split('=')[1].split('-'))
-
-                # 处理范围错误
-                if start < 0 or end > file_size:
-                    return HttpResponse("Invalid range", status=416)
-
-                # 读取文件部分内容
-                def file_iterator(file_path, start, end):
-                    with open(file_path, 'rb') as f:
-                        f.seek(start)
-                        yield f.read(end - start + 1)
-
-                response.streaming_content = file_iterator(video_path, start, end)
-                response.status_code = 206  # Partial Content
-        else:
-            # 返回错误信息，例如 400 Bad Request
-            return HttpResponse("Invalid Range header", status=400)
-    else:
-        # 没有范围请求，读取整个文件
-        def file_iterator(file_path):
-            with open(file_path, 'rb') as f:
-                yield f.read()
-
-        response.streaming_content = file_iterator(video_path)
-
-    return response
 
 
 @csrf_exempt
@@ -505,9 +450,11 @@ from src.experiments.main import execute_ekomab
 def load_data(request):
     global images
     data = json.loads(request.body.decode('utf-8'))
-    video_name = 'cherry_5min'
-    # video_name = data['videos'][0]['name']
+    print('[upload_video_detail]: ', data)
+    # video_name = 'cherry_5min'
+    video_name, ext_name = os.path.splitext(data['videos'][0]['uuid_name'])
     print('[video_name]: ', video_name)
+    print('[ext_name]: ', ext_name)
     images = load_dataset(video_name)
     # anchor_count = int(len(images) * 0.1)
     # eko = execute_ekomab(images, video_name, nb_buckets=anchor_count)
@@ -547,6 +494,7 @@ def exe_model_pre(request):
     data_trans(frame_sql, selfParameters)
     print('[frame_sql]: ', frame_sql)
     print('[selfParameters]: ', selfParameters)
+
     beta = selfParameters['beta']
     anchor_count = int(len_images * beta)
     eko = execute_ekomab(images, video_name, nb_buckets=anchor_count,
@@ -555,7 +503,9 @@ def exe_model_pre(request):
                          reacall_threshold=frame_sql['recall'], precision_threshold=frame_sql['precision'],
                          label_propagate_al=selfParameters['propagateFunc']
                          )
+
     times, result = query_process_precision(eko, dnn_invocation=anchor_count, images=images)
+
     pre_result = {'inds': [int(ind) for ind in result['inds']], 'y_pred': [float(pred) for pred in result['y_pred']]}
     # 遍历字典的键值对
     # for key, value in pre_result.items():
@@ -565,7 +515,7 @@ def exe_model_pre(request):
     #     print(f"Key: {key}, Value: {value}, Type: {value_type}")
     # 将字典 result 转换为 JSON 字符串
     # result_json = json.dumps(pre_result)
-    # eko.save_index_cache()
+    eko.save_index_cache()
     print('[Here has executed the pre al]')
     return JsonResponse({
         'code': 1,

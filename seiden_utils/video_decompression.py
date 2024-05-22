@@ -65,6 +65,12 @@ class DecompressionModule:
     def convert_and_save_by_frame_Id(self, load_directory, save_directory, frame_ids, video_uuid_name):
         vid_ = cv2.VideoCapture(load_directory)
         frame_count = int(vid_.get(cv2.CAP_PROP_FRAME_COUNT))
+        width = int(vid_.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(vid_.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # Calculate new dimensions
+        new_width = width // 2
+        new_height = height // 2
         ## let's cap the frame_count to 300k
         ### no when we do convert and save, we load one and save and repeat
         k = 0
@@ -81,6 +87,7 @@ class DecompressionModule:
         imagesName = []
         for i in tqdm(range(frame_count)):
             success, image = vid_.read()
+            image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             image = Image.fromarray(image)
             if i % update_step_length == 0 or i == frame_count - 1:
@@ -216,7 +223,8 @@ class DecompressionModule:
     def get_video_capture_objects(self, folder_path, video_name, frame_count_limit=300000, size=[234, 416]):
         # 指定视频文件所在的文件夹路径
         # folder_path = fr'D:/Projects/PyhtonProjects/thesis/video_data/{video_name}'
-        folder_path = fr'/home/wangshuo_20/pythonpr/thesis_data/video_data/{video_name}'
+        folder_path = fr'/home/wangshuo_20/pythonpr/VDBMS_ws/media/{video_name}'
+        # folder_path = fr'/home/wangshuo_20/pythonpr/thesis_data/video_data/{video_name}'
         path = os.path.join(folder_path, 'video')
         # 获取文件夹中所有视频的VideoCapture对象
         video_captures = self.capture_videos_in_folder(folder_path)

@@ -36,7 +36,8 @@ class SystemTool:
     def __init__(self):
         self.annotation = ''
         # self.directory = 'D:/Projects/PyhtonProjects/thesis/tasti_data/cache'
-        self.directory = '/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache'
+        self.directory = '/home/wangshuo_20/pythonpr/VDBMS_ws/media/videoCacheData'
+        # self.directory = '/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache'
 
     def delete_files_in_directory(self):
         """
@@ -240,7 +241,8 @@ def query_process2(index):
 def load_dataset(video_name):
     ### load video to memory
     loader = Loader()
-    video_fp = os.path.join('/home/wangshuo_20/pythonpr/thesis_data/video_data/', video_name)
+    video_fp = os.path.join('/home/wangshuo_20/pythonpr/VDBMS_ws/media/', video_name)
+    # video_fp = os.path.join('/home/wangshuo_20/pythonpr/thesis_data/video_data/', video_name)
     # video_fp = os.path.join('D:/Projects/PyhtonProjects/thesis/video_data/', video_name)
     images = loader.load_video(video_fp)
     return images

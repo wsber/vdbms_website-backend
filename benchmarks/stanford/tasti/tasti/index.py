@@ -18,9 +18,11 @@ class Index:
             self.get_target_dnn_dataset(train_or_test='train'),
             self.target_dnn_callback
         )
-        self.filepath = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden/{self.config.video_name}_cache.csv"
+        self.filepath = fr"/home/wangshuo_20/pythonpr/VDBMS_ws/media/videoCacheData/{self.config.video_name}/seiden/{self.config.video_name}_cache.csv"
+        # self.filepath = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden/{self.config.video_name}_cache.csv"
         # self.filepath = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden/{self.config.video_name}_cache.csv"
-        self.filepath_full = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden/{self.config.video_name}_cache_full.csv"
+        self.filepath_full = fr"/home/wangshuo_20/pythonpr/VDBMS_ws/media/videoCacheData/{self.config.video_name}/seiden/{self.config.video_name}_cache_full.csv"
+        # self.filepath_full = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden/{self.config.video_name}_cache_full.csv"
         # self.filepath_full = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden/{self.config.video_name}_cache_full.csv"
         self.index_cache = self.read_csv_to_index(self.filepath)
         self.full_index_cache = self.read_csv_to_index(self.filepath_full)
@@ -522,7 +524,7 @@ class Index:
         return index
 
     # def load_model(self, model_path='D:/Projects/PyhtonProjects/thesis/tasti_data/cache/tasti_triplet/model.pt'):
-    def load_model(self, model_path='/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/tasti_triplet/model.pt'):
+    def load_model(self, model_path='/home/wangshuo_20/pythonpr/VDBMS_ws/media/videoCacheData/tasti_triplet/model.pt'):
         model = torchvision.models.resnet18(pretrained=False)
         model.fc = torch.nn.Linear(512, 128)
         model.load_state_dict(torch.load(model_path))

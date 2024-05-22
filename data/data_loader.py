@@ -17,7 +17,8 @@ class Loader:
         self.dc = DecompressionModule()
 
     def load_video(self, path):
-        final_path = os.path.join(path, 'video.mp4')
+        final_path = path + '.mp4'
+        # final_path = os.path.join(path, 'video.mp4')
         images = self.dc.convert2images(final_path)
 
         return images

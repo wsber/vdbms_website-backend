@@ -692,7 +692,8 @@ class EKO_mab(EKO_alternate):
             output_dir (str): The directory to save the CSV file.
             filename (str): The name of the CSV file.
         """
-        output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
+        output_dir = fr"/home/wangshuo_20/pythonpr/VDBMS_ws/media/videoCacheData/{self.config.video_name}/seiden"
+        # output_dir = fr"/home/wangshuo_20/pythonpr/thesis_data/tasti_data/cache/{self.config.video_name}/seiden"
         # output_dir = fr"D:/Projects/PyhtonProjects/thesis/tasti_data/cache/{self.config.video_name}/seiden"
         filename = fr"{self.config.video_name}_cache.csv"
         index = self.index_cache
@@ -746,7 +747,8 @@ class EKO_mab(EKO_alternate):
         return self.config.cache_dir
 
     def override_target_dnn_cache(self, target_dnn_cache, train_or_test):
-        root = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
+        root = '/home/wangshuo_20/pythonpr/VDBMS_ws/media'
+        # root = '/home/wangshuo_20/pythonpr/thesis_data/video_data'
         ROOT_DATA = self.config.video_name
         category = self.config.category
         print(category)

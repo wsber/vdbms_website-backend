@@ -31,7 +31,6 @@ urlpatterns = [
     path('users/update/url', views.update_user_profile_url),
 
     path('videos/', views.get_videos),
-    path('videos/play/<str:video_id>', views.get_video),
     path('videos/delete', views.delete_video_by_id),
     path('videos/delete/batch', views.delete_batch_videos),
     path('upload/', views.upload_video),
